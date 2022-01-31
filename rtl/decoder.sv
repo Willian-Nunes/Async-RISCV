@@ -17,7 +17,7 @@ module decoder
     output logic [4:0] regB,                // Address of the second register(rs2)
     output logic [4:0] regD,                // Address of the destination register(rd)
     output fmts fmt_out,                    // Exit of signal "fmt" that indicates the instruction format
-    output logic [31:0] instruction_out,    // Object code to Operand Fetch
+    output logic [31:0] instruction_out,    // Object code to Operand Fetch 
     output instruction_type i_out,          // Decoded instruction 
     output logic [31:0] NPC_out,
     output xu xu_sel,
