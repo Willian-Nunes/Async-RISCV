@@ -1,6 +1,7 @@
 `include "fetch.sv"
 `include "decoder.sv"
-`include "RLL.sv"
+`include "OPF.sv"
+`include "regbank.sv"
 `include "execute.sv"
 `include "retire.sv"
 
@@ -66,6 +67,9 @@ module TOP(
 /******************************/
 
     logic [4:0] regA, regB, regD;
+    logic [4:0] addra, addrb;
+    logic [31:0] dataA, dataB;
+
     logic [31:0] NPC_decoder, NPC_RLL, instruction_RLL; 
     fmts fmt_RLL;
     instruction_type i_RLL, i_exec, i_ret, i_int;
@@ -147,9 +151,13 @@ module TOP(
     decoder decode ( .NPC_IN(NPC_decoder), .tag_in(tag_decoder),
                     .i_out(i_RLL), .tag_out(tag_RLL), .NPC_out(NPC_RLL), .instruction_out(instruction_RLL), .fmt_out(fmt_RLL), .xu_sel(xu_RLL), .*);
 
-    RLL #(TOKENS) RLL1( .NPC_in(NPC_RLL), .instruction(instruction_RLL), .i(i_RLL), .xu_sel_in(xu_RLL), .fmt(fmt_RLL), .tag_in(tag_RLL), .we(reg_we), .in(WrData),
+    OPF #(TOKENS+1) OPF1( .NPC_in(NPC_RLL), .instruction(instruction_RLL), .i(i_RLL), .xu_sel_in(xu_RLL), .fmt(fmt_RLL), .tag_in(tag_RLL), .we(reg_we),
                 .opA(opA_int), .opB(opB_int), .opC(opC_int), .NPC(NPC_int),
-                .i_out(i_int), .xu_sel(xu_int), .tag_out(tag_int), .*);
+                .i_out(i_int), .xu_sel(xu_int), .tag_out(tag_int),
+                .addrA(addra), .addrB(addrb), .addrW(addrW), .*);
+
+    regbank RB1 (.addra(addra), .addrb(addrb), .addrw(addrW), .outa(dataA), .outb(dataB), .in(WrData), .*);
+                
 
     execute #(DEPTH) Exec ( .i(i_exec), .xu_sel(xu_exec), .tag_in(tag_exec),
                    .result_out(result_ret), .jump_out(jump_ret), .stream_tag_out(tag_ret), .write(write_ret), .size(size_ret), .we_out(we_ret), .*);
