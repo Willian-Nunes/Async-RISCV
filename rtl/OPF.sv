@@ -29,7 +29,7 @@ module OPF #(parameter TOKENS = 4)
     );
 
     typedef enum bit {LOCK, UNLOCK} state_t;
-    logic [4:0] a_r, b_r, d_r, a_next, b_next, d_next;
+    logic [4:0] a_r, b_r, d_r, a_next, b_next, d_next, aa, bb, dd;
     logic [31:0] NPC_r, instruction_r, NPC_next, NPC_int, instruction_next;
     logic [3:0] tag_r, tag_next, tag_int;
     logic [2:0] fmt_r, fmt_next;
@@ -43,6 +43,11 @@ module OPF #(parameter TOKENS = 4)
     wor [31:0] locked;
     logic [31:0] lock_queue[TOKENS];
 
+    assign aa = instruction_r[19:15];
+    assign bb = instruction_r[24:20];
+    assign dd = instruction_r[11:7];
+
+
     // Control FSM
     always_ff @(posedge clk or negedge reset)
       if (!reset)
@@ -51,7 +56,7 @@ module OPF #(parameter TOKENS = 4)
         ps <= ns;
 
     always_comb
-      if((locked_r[a_r]==1 || locked_r[b_r]==1) || (locked_r[0]==1 &&  (xu_r==memory && (i_r==OP0 | i_r==OP1 | i_r==OP2 | i_r==OP3 | i_r==OP4)))) 
+      if((locked_r[aa]==1 || locked_r[bb]==1) || (locked_r[0]==1 &&  (xu_r==memory && (i_r==OP0 | i_r==OP1 | i_r==OP2 | i_r==OP3 | i_r==OP4)))) 
         ns <= LOCK;
       else 
         ns <= UNLOCK;
@@ -126,7 +131,7 @@ module OPF #(parameter TOKENS = 4)
 ////////////////////////////////////////////////// Conversion to one-hot codification ///////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     always_comb begin
-        target_int <= 1 << d_r;
+        target_int <= 1 << dd;
 
         if(xu_r==memory && (i_r==OP5 | i_r==OP6 | i_r==OP7))
             target_int[0] <= 1;
@@ -241,7 +246,7 @@ module OPF #(parameter TOKENS = 4)
     always@(posedge clk) begin
         NPC_int <= NPC_r;
         tag_int <= tag_r;
-        addrA <= a_r;
-        addrB <= b_r;
+        addrA <= aa;
+        addrB <= bb;
     end
 endmodule
