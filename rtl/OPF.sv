@@ -29,7 +29,7 @@ module OPF #(parameter TOKENS = 4)
     );
 
     typedef enum bit {LOCK, UNLOCK} state_t;
-    logic [4:0] a_r, b_r, d_r, a_next, b_next, d_next, aa, bb, dd;
+    logic [4:0] aa, bb, dd;
     logic [31:0] NPC_r, instruction_r, NPC_next, NPC_int, instruction_next;
     logic [3:0] tag_r, tag_next, tag_int;
     logic [2:0] fmt_r, fmt_next;
@@ -64,17 +64,6 @@ module OPF #(parameter TOKENS = 4)
     always_comb
       accept_input <= ps == UNLOCK ? 1'b1 : 1'b0;
 
-    // Input conditional handshake
-    for (genvar i = 0 ; i < 5 ; i++) begin
-        discard discard_a (.a(a_next[i]), .en(!accept_input), .q(a_r[i]), .*);
-        hold hold_a (.a(regA[i]), .en(accept_input), .q(a_r[i]), .*);
-
-        discard discard_b (.a(b_next[i]), .en(!accept_input), .q(b_r[i]), .*);
-        hold hold_b (.a(regB[i]), .en(accept_input), .q(b_r[i]), .*);
-
-        discard discard_d (.a(d_next[i]), .en(!accept_input), .q(d_r[i]), .*);
-        hold hold_d (.a(regD[i]), .en(accept_input), .q(d_r[i]), .*);
-    end
 
     for (genvar i = 0 ; i < 32 ; i++) begin
         discard discard_NPC (.a(NPC_next[i]), .en(!accept_input), .q(NPC_r[i]), .*);
@@ -107,9 +96,6 @@ module OPF #(parameter TOKENS = 4)
 
     always_ff @(posedge clk or negedge reset)
         if (!reset) begin
-            a_next <= '0;
-            b_next <= '0;
-            d_next <= '0;
             NPC_next <= '0;
             instruction_next <= '0;
             i_next <= '0;
@@ -117,9 +103,6 @@ module OPF #(parameter TOKENS = 4)
             fmt_next <= '0;
             tag_next <= '0;
         end else begin
-            a_next <= a_r;
-            b_next <= b_r;
-            d_next <= d_r;
             NPC_next <= NPC_r;
             instruction_next <= instruction_r;
             i_next <= i_r;
