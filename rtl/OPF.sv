@@ -4,9 +4,6 @@ import my_pkg::*;
 module OPF #(parameter TOKENS = 4)
     (input logic clk, reset,
     input logic we,
-    input logic [4:0] regA,
-    input logic [4:0] regB,
-    input logic [4:0] regD,
     input logic [31:0] NPC_in,
     input logic [31:0] instruction,
     input instruction_type i,

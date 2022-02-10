@@ -32,9 +32,6 @@ module TOP(
     output logic [31:0] NPC_decoder,
     output logic [3:0] tag_decoder,
     /////////////////////////////////
-    output logic [4:0] regA,
-    output logic [4:0] regB,
-    output logic [4:0] regD,
     output logic [31:0] NPC_RLL,
     output fmts fmt_RLL,
     output logic [31:0] instruction_RLL,
@@ -66,7 +63,6 @@ module TOP(
     parameter DEPTH = 1;
 /******************************/
 
-    logic [4:0] regA, regB, regD;
     logic [4:0] addra, addrb;
     logic [31:0] dataA, dataB;
 
