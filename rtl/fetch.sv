@@ -47,7 +47,6 @@ module fetch  #(parameter start_address = 32'h00000000)     //Generic start addr
     end
 
 /////////////////////////////////////////////////////////// TAG ///////////////////////////////////////////////////////////////////////////
-
     always@(posedge clk or negedge reset) 
       if(!reset)
         tag <= '0;

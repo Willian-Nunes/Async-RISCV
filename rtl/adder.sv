@@ -24,15 +24,15 @@ module adder #(parameter  DEPTH = 3)
 
         if(i==OP3)                        // Set if opA is less than opB
           if($signed(opA) < $signed(opB))
-            result[0] <= 32'b1;
+            result[0] <= 1;
           else
-            result[0] <= 32'b0;
+            result[0] <= 0;
 
         else if(i==OP2)                 // Set if opA is less than opB UNSIGNED
           if($unsigned(opA) < $unsigned(opB))
-            result[0] <= 32'b1;
+            result[0] <= 1;
           else
-            result[0] <= 32'b0;
+            result[0] <= 0;
 
         else if(i==OP1)                             // SUBTRACT
           result[0] <= opA - opB;
@@ -40,7 +40,4 @@ module adder #(parameter  DEPTH = 3)
         else                                         // ADD (ADD,ADDI and AUIPC)
           result[0] <= opA + opB;
     end
-
-
-
   endmodule
