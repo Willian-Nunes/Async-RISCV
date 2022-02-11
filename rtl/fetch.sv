@@ -14,7 +14,6 @@ module fetch  #(parameter start_address = 32'h00000000)     //Generic start addr
     output logic [31:0] NPC,                                 // The Actual PC Address
     output logic [3:0] tag_out);                          // Instruction Tag 
 
-    parameter WIDTH=32;
     reg [31:0] PC, NPC_int;
     logic [3:0] tag, tag_int;
     logic [31:0] result_reg, nextPC;
@@ -35,7 +34,7 @@ module fetch  #(parameter start_address = 32'h00000000)     //Generic start addr
 
     probe s (.a(|NewPC), .q(selector), .*);
 
-    for (genvar i = 0; i < WIDTH ; i++) begin
+    for (genvar i = 0; i < 32 ; i++) begin
       hold jump_h (.a(result_reg[i]), .en(selector), .q(PC_int[i]), .*);
       discard sum_d (.a(nextPC[i]), .en(!selector), .q(PC_int[i]), .*);
     end

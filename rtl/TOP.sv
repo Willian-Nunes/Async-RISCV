@@ -40,7 +40,6 @@ module TOP(
     output logic [3:0] tag_RLL,
     ///////////////////////////
     output logic [31:1] addrW,
-    output logic [31:0] locked,
     ///////////////////////////////
     output instruction_type i_exec,
     output xu xu_exec,
@@ -84,7 +83,6 @@ module TOP(
     logic [31:0] NPC_decoder_int;
 
     logic [31:1] addrW;
-    logic [31:0] locked;
 
     logic [31:0] opA, opB, opC, NPC, opA_int, opB_int, opC_int, NPC_int;
     logic [31:0] opA_queue[TOKENS];

@@ -13,7 +13,6 @@ module OPF #(parameter TOKENS = 4)
     output logic [4:0] addrA,
     output logic [4:0] addrB,
     output logic [31:1] addrW,
-    output logic [31:0] locked,
     output instruction_type i_out,
     output xu xu_sel,
     output logic [3:0] tag_out,
@@ -26,7 +25,7 @@ module OPF #(parameter TOKENS = 4)
     );
 
     typedef enum bit {LOCK, UNLOCK} state_t;
-    logic [4:0] aa, bb, dd;
+    logic [4:0] regA, regB, regD;
     logic [31:0] NPC_r, instruction_r, NPC_next, NPC_int, instruction_next;
     logic [3:0] tag_r, tag_next, tag_int;
     logic [2:0] fmt_r, fmt_next;
@@ -40,12 +39,10 @@ module OPF #(parameter TOKENS = 4)
     wor [31:0] locked;
     logic [31:0] lock_queue[TOKENS];
 
-    assign aa = instruction_r[19:15];
-    assign bb = instruction_r[24:20];
-    assign dd = instruction_r[11:7];
 
-
-    // Control FSM
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////// Conntrol FSM ///////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     always_ff @(posedge clk or negedge reset)
       if (!reset)
         ps <= UNLOCK;
@@ -53,7 +50,7 @@ module OPF #(parameter TOKENS = 4)
         ps <= ns;
 
     always_comb
-      if((locked_r[aa]==1 || locked_r[bb]==1) || (locked_r[0]==1 &&  (xu_r==memory && (i_r==OP0 | i_r==OP1 | i_r==OP2 | i_r==OP3 | i_r==OP4)))) 
+      if((locked_r[regA]==1 || locked_r[regB]==1) || (locked_r[0]==1 &&  (xu_r==memory && (i_r==OP0 | i_r==OP1 | i_r==OP2 | i_r==OP3 | i_r==OP4)))) 
         ns <= LOCK;
       else 
         ns <= UNLOCK;
@@ -62,6 +59,7 @@ module OPF #(parameter TOKENS = 4)
       accept_input <= ps == UNLOCK ? 1'b1 : 1'b0;
 
 
+////////////////////////////////////////////////// Input mechanism //////////////////////////////////////////////////////////////////////////////////
     for (genvar i = 0 ; i < 32 ; i++) begin
         discard discard_NPC (.a(NPC_next[i]), .en(!accept_input), .q(NPC_r[i]), .*);
         hold hold_NPC (.a(NPC_in[i]), .en(accept_input), .q(NPC_r[i]), .*);
@@ -90,7 +88,7 @@ module OPF #(parameter TOKENS = 4)
         hold hold_tag (.a(tag_in[j]), .en(accept_input), .q(tag_r[j]), .*);
     end
 
-
+////////////////////////////////////////////////// Loop Closure /////////////////////////////////////////////////////////////////////////////////////
     always_ff @(posedge clk or negedge reset)
         if (!reset) begin
             NPC_next <= '0;
@@ -107,11 +105,17 @@ module OPF #(parameter TOKENS = 4)
             fmt_next <= fmt_r;
             tag_next <= tag_r;
         end
+
+////////////////////////////////////////////////// Imediate addresses from inst /////////////////////////////////////////////////////////////////////
+    assign regA = instruction_r[19:15];
+    assign regB = instruction_r[24:20];
+    assign regD = instruction_r[11:7];
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////// Conversion to one-hot codification ///////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     always_comb begin
-        target_int <= 1 << dd;
+        target_int <= 1 << regD;
 
         if(xu_r==memory && (i_r==OP5 | i_r==OP6 | i_r==OP7))
             target_int[0] <= 1;
@@ -226,7 +230,7 @@ module OPF #(parameter TOKENS = 4)
     always@(posedge clk) begin
         NPC_int <= NPC_r;
         tag_int <= tag_r;
-        addrA <= aa;
-        addrB <= bb;
+        addrA <= regA;
+        addrB <= regB;
     end
 endmodule

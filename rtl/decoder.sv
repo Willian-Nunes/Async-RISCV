@@ -26,7 +26,6 @@ module decoder
     xu xu_int;
     instruction_type op;
 
-
 /////////////////////////////// Decodes the opcodes to find out the type of the instruction and then assign it to signal "i" ////////////////////////////
     always_comb begin
             if (instruction[6:0]==7'b0110111) i<=LUI;
@@ -73,11 +72,7 @@ module decoder
         else if (instruction[31:25]==7'b0100000 & instruction[14:12]==3'b101 & instruction[6:0]==7'b0110011) i<=SRA;
         else if (instruction[31:25]==7'b0000000 & instruction[14:12]==3'b110 & instruction[6:0]==7'b0110011) i<=OR;
         else if (instruction[31:25]==7'b0000000 & instruction[14:12]==3'b111 & instruction[6:0]==7'b0110011) i<=AND;
-/*
-        else if (instruction[6:0]==7'b0001111) i<=FENCE;  // Opcodes of fence and ecall instructions that wasnt implemented at the first version
-        else if (instruction[31:22]==  '0 & instruction[6:0]==7'b1110011) i<=ECALL;
-        else if (instruction[6:0]==7'b1110011) i<=CSRR;
-*/
+
         else if (instruction[31:0]==32'h00000000) i<=NOP; // Standard NOP instruction
         else if (instruction[31:0]==32'h00000013) i<=NOP;
 
