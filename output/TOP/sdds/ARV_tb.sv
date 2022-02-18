@@ -68,8 +68,6 @@ module  ARV_tb ();
 
     int fd, fd1, fd2, fd3, fd4, fd5;
     logic [31:0]  Waddress, Ddata,  data_read;
-    logic Dwe_n, Doe_n, Ioe_n;
-    logic [1:0] size_int;
     byte char;
 
     int               log_file;
@@ -339,28 +337,20 @@ module  ARV_tb ();
             $fdisplay(fd3,"[%0d] Retire received:  Res0=%0h  Res1=%0h  We=%0d  Tag=%0d   Jump=%0d  Write=%0d  Size=%0d",
                      $time, result_ret_0__t, result_ret_1__t, we_ret_t, tag_ret_t, jump_ret_t, write_ret_t, size_ret_t );
         end
-    
     `endif 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////// RAM INSTANTIATION ///////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	RAM_mem #(32'h00000000) RAM_MEM( .we_n(Dwe_n), .bw(size_int), .write_address(Waddress), .data_in(Ddata),
-                                     .Ioe_n(Ioe_n), .inst_address(i_address), .instruction_out(instruction_int),
-                                     .oe_n(Doe_n), .read_address(read_address), .data_out(data_read));
+	RAM_mem #(32'h00000000) RAM_MEM( .write_enable(write), .bw(size), .write_address(Waddress), .data_in(Ddata),
+                                     .rst(reset), .inst_address(i_address), .instruction_out(instruction_int),
+                                     .read_enable(read), .read_address(read_address), .data_out(data_read));
 
     always_comb begin
-        if(write==1) 	Dwe_n <= 0; 	else Dwe_n <= 1;					// DWE
         if(write==1)   Waddress<=write_address;	 else Waddress<=32'h00000000;  // Daddress - write_address
         if(write==1)  Ddata <= data_write; else Ddata <= 32'h00000000;
     end
-
-    assign size_int = size;
-
-    assign Doe_n = !read;
-
-    assign Ioe_n = !reset;
 
     always@(posedge read_i)
         gmInst.put(instruction_int);
@@ -377,23 +367,23 @@ module  ARV_tb ();
             gmDin.put(data_read);
     end
 
-always @(write) begin
-    if((write_address == 32'h80004000 | write_address == 32'h80001000) & write==1) begin
-        char <= data_write[7:0];
-        $write("%c",char);
-        $fwrite(fd,"%c",char);
+    always @(write) begin
+        if((write_address == 32'h80004000 | write_address == 32'h80001000) & write==1) begin
+            char <= data_write[7:0];
+            $write("%c",char);
+            $fwrite(fd,"%c",char);
+        end
+        ////////////////////////////////////////////
+        if(write_address==32'h80000000) begin
+            $display("# %t END OF SIMULATION",$time);
+            $fdisplay(fd,"\n# %t END OF SIMULATION",$time);
+            $fdisplay(fd2,"%0t", $realtime);
+            $finish;
+        end
     end
-    ////////////////////////////////////////////
-    if(write_address==32'h80000000) begin
-        $display("# %t END OF SIMULATION",$time);
-        $fdisplay(fd,"\n# %t END OF SIMULATION",$time);
-        $fdisplay(fd2,"%0t", $realtime);
-        $finish;
-    end
-end
 
-always #1000000000
-        $display("%d elapsed", $time);
+    always #1000000000
+            $display("%d elapsed", $time);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////// READ ARCHIVE ///////////////////////////////////////////////////////////////////////

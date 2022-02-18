@@ -7,9 +7,9 @@ import my_pkg::*;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 module RAM_mem #(parameter startaddress = 32'h00000000)(
-    input logic we_n, 
-    input logic oe_n,
-    input logic Ioe_n,  
+    input logic write_enable, 
+    input logic read_enable,
+    input logic rst,  
     input logic [1:0] bw,
     input wires32 inst_address, 
     input wires32 write_address,
@@ -49,8 +49,8 @@ int i;
     end
 
 ////////////////////////////////////////////////////////////// Writes in memory ASYNCHRONOUSLY //////////////////////////////////////////////////////
-    always @(we_n or W_low_address) begin               // Sensitivity list 
-        if(we_n==0 && W_low_address_int>=0 && W_low_address_int<=(MEMORY_SIZE-3)) begin // Check address range and write signals
+    always @(write_enable or W_low_address) begin               // Sensitivity list 
+        if(write_enable==1 && W_low_address_int>=0 && W_low_address_int<=(MEMORY_SIZE-3)) begin // Check address range and write signals
                 if(write_address==32'h80001000)
                     //$display("[%0d] write %0d(%h) in add: %0d(%h) \n", $time, data_in,data_in,W_low_address_int,W_low_address_int);
                     ;
@@ -69,8 +69,8 @@ int i;
     end
 
 ////////////////////////////////////////////////////////////// Read DATA from memory /////////////////////////////////////////////////////////////////////
-    always @(oe_n or R_low_address or INST_low_address) begin
-        if(oe_n==0 && R_low_address_int>=0 && R_low_address_int<=(MEMORY_SIZE-3)) begin // Check address range and read signals
+    always @(read_enable or R_low_address or INST_low_address) begin
+        if(read_enable==1 && R_low_address_int>=0 && R_low_address_int<=(MEMORY_SIZE-3)) begin // Check address range and read signals
             data_out[31:24] <= RAM[R_low_address_int+3];
             data_out[23:16] <= RAM[R_low_address_int+2];
             data_out[15:8] <= RAM[R_low_address_int+1];
@@ -79,8 +79,8 @@ int i;
     end
 
 ////////////////////////////////////////////////////////////// Read INSTRUCTION from memory /////////////////////////////////////////////////////////////////////
-    always @(Ioe_n or INST_low_address) begin
-        if(Ioe_n==0 && INST_low_address_int>=0 && INST_low_address_int<=(MEMORY_SIZE-3)) begin // Check address range and read signals
+    always @(rst or INST_low_address) begin
+        if(rst==1 && INST_low_address_int>=0 && INST_low_address_int<=(MEMORY_SIZE-3)) begin // Check address range and read signals
             instruction_out[31:24] <= RAM[INST_low_address_int+3];
             instruction_out[23:16] <= RAM[INST_low_address_int+2];
             instruction_out[15:8] <= RAM[INST_low_address_int+1];
