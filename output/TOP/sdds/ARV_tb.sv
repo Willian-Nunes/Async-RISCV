@@ -1,11 +1,11 @@
 `timescale 1ns/1ps
 `include "/home/williannunes/ARV/rtl/pkg.sv"
-`include "/home/williannunes/ARV/output/RAM.sv"
+`include "./RAM.sv"
 `include "./freepdk45/8.00/logical.v"
 //`include "/soft64/async/ferramentas/pulsar/v2.0/tech/freepdk45/sdds.sv"
 //`include "/soft64/async/ferramentas/pulsar/v2.0/tech/freepdk45/ASCEND_FREEPDK45.v"
 `include "/home/williannunes/ARV/ASCEND_FREEPDK45.v"
-`define debug 1
+//`define debug 1
 
 import my_pkg::*;
 
@@ -19,11 +19,11 @@ module  ARV_tb ();
     logic read_i;
     logic [31:0] i_address, instruction_int;
 
-    //`ifdef debug
+    `ifdef debug
         logic [31:0] New_pc_t, New_pc_f, New_pc_ack, New_pc;
         logic reg_we_t, reg_we_f, reg_we_ack;
         logic [31:0] WrData_t, WrData_f, WrData_ack;
-    //`endif
+    `endif
 
     logic read_t, read_f, read_ack;
     logic [31:0] read_address_t, read_address_f, read_address_ack, DATA_in_t, DATA_in_f, DATA_in_ack;
@@ -53,15 +53,12 @@ module  ARV_tb ();
         logic write_ret_t, write_ret_f, write_ret_ack;
         logic [1:0] size_ret_t, size_ret_f, size_ret_ack;
         ///////////////////////////////////////////////////////////////////////////
-        `endif
-
         logic [31:1] addrW_t, addrW_f, addrW_ack;
-        logic [31:0] locked_t, locked_f, locked_ack;
 
         instruction_type i_RLL, i_exec;
         xu xu_RLL, xu_exec;
         
-    //`endif
+    `endif
 
     logic [31:0] NPC, instruction;
     logic [31:0] read_address;
@@ -70,12 +67,9 @@ module  ARV_tb ();
     logic [31:0] write_address, data_write;
 
     int fd, fd1, fd2, fd3, fd4, fd5;
-    int address_flag, l;
-    logic [31:0]  Waddress, Ddata,  data_read, tb_add, tb_data;
-    logic code, Dwe_n, Doe_n, Ioe_n, go_d;
+    logic [31:0]  Waddress, Ddata,  data_read;
+    logic Dwe_n, Doe_n, Ioe_n;
     logic [1:0] size_int;
-    logic [3:0] test;
-    string line, line1, line2, s, outString;
     byte char;
 
     int               log_file;
@@ -139,7 +133,7 @@ module  ARV_tb ();
 
         gmInst.get(instruction_t);
         
-        if((instruction_t==32'h00000093 || instruction_t==32'h00004517 || instruction_t==32'h00001517) && ($time<3000))
+        if((instruction_t==32'h00000093 || instruction_t==32'h00004517 || instruction_t==32'h00001517) && ($time<300))
             gmInst.get(instruction_t);
 
         instruction_f = ~instruction_t;
@@ -152,7 +146,6 @@ module  ARV_tb ();
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////// MEMORY SIGNALS ///////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
     always @(DATA_in_ack or read_address_t or read_address_f or reset)
         if(~|(read_address_t|read_address_f)) begin
             read = 0;
@@ -207,10 +200,7 @@ module  ARV_tb ();
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////// DEBUG ////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    //`ifdef debug
-
-
+    `ifdef debug
     always @(WrData_t or WrData_f or reg_we_t or reg_we_f)
         if( (~|(WrData_t|WrData_f)) && (~|(reg_we_t|reg_we_f)))begin
             WrData_ack = '0;
@@ -221,9 +211,6 @@ module  ARV_tb ();
 
             gmRes.put(WrData_t);
             gmWe.put(reg_we_t);
-
-            //$display("[%0d] WrData: %d \t %h \t We: %d",
-            //           $time, WrData_t, WrData_t, reg_we_t);
 
             $fdisplay(fd5,"[%0d] Retire: We=%0d  %0h(%0d) ",
                         $time, reg_we_t, WrData_t, WrData_t);
@@ -249,19 +236,6 @@ module  ARV_tb ();
             addrW_ack = '1;
         end
 
-    `ifdef debug
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    always @(locked_t or locked_f)
-        if (~|(locked_t|locked_f)) begin
-            locked_ack = '0;
-        end else if (&(locked_t|locked_f)) begin
-
-        //    $fdisplay(fd5,"[%0d] locked: %h \t %04b %04b %4b %4b %4b %4b %4b %4b",
-        //             $time, locked_t, locked_t[31:28], locked_t[27:24], locked_t[23:20], locked_t[19:16], locked_t[15:12], locked_t[11:8], locked_t[7:4], locked_t[3:0] );
-
-            locked_ack = '1;
-        end
-    
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     always @(New_pc_t or New_pc_f)
         if (~|(New_pc_t|New_pc_f)) begin
@@ -377,28 +351,19 @@ module  ARV_tb ();
                                      .oe_n(Doe_n), .read_address(read_address), .data_out(data_read));
 
     always_comb begin
-	    //Write in memory
-        if(write==1 || go_d==1) 	Dwe_n <= 0; 	else Dwe_n <= 1;					// DWE
-        if(!reset)					Waddress <= tb_add; else if(write==1)   Waddress<=write_address;	 else Waddress<=32'h00000000;  // Daddress - write_address
-        if(!reset)                   size_int = 2'b11;    else size_int = size; 		// bw
-        
-        if(!reset)	
-            Ddata <= tb_data;                                                               
-        else if(write==1)
-            Ddata <= data_write;
-        else 
-            Ddata <= 32'h00000000;
-end
+        if(write==1) 	Dwe_n <= 0; 	else Dwe_n <= 1;					// DWE
+        if(write==1)   Waddress<=write_address;	 else Waddress<=32'h00000000;  // Daddress - write_address
+        if(write==1)  Ddata <= data_write; else Ddata <= 32'h00000000;
+    end
+
+    assign size_int = size;
 
     assign Doe_n = !read;
 
     assign Ioe_n = !reset;
 
-    always@(posedge read_i) begin
-        //#0.1
-        //$write("PUT in gmINST: %h \n",instruction_int);
+    always@(posedge read_i)
         gmInst.put(instruction_int);
-    end
 
     always@(posedge read) begin
         automatic logic [31:0] auxTime;
@@ -412,17 +377,9 @@ end
             gmDin.put(data_read);
     end
 
-    
-always #1000000000
-        $display("%d elapsed", $time);
-
-
-
-
 always @(write) begin
     if((write_address == 32'h80004000 | write_address == 32'h80001000) & write==1) begin
         char <= data_write[7:0];
-        //$write("Output1: %c \n",char);
         $write("%c",char);
         $fwrite(fd,"%c",char);
     end
@@ -431,10 +388,12 @@ always @(write) begin
         $display("# %t END OF SIMULATION",$time);
         $fdisplay(fd,"\n# %t END OF SIMULATION",$time);
         $fdisplay(fd2,"%0t", $realtime);
-        //$stop;
         $finish;
     end
 end
+
+always #1000000000
+        $display("%d elapsed", $time);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////// READ ARCHIVE ///////////////////////////////////////////////////////////////////////
@@ -445,8 +404,6 @@ end
       //$dumpfile("worst.vcd");
       //$dumpvars;
 
-      //fd = $fopen ("inst.txt", "w");
-      //fd2 = $fopen ("data.txt", "r");
       fd = $fopen ("output.txt", "w");
       fd2 = $fopen ("simTime.txt", "w");
       fd3 = $fopen ("debugCORE.txt", "w");
@@ -458,85 +415,8 @@ end
 
       reset = 0;
 
-        code = 0;
-
-        fd1 = $fopen ("/home/williannunes/BerkeleySuite.txt", "r");                            // Open file, read mode
-        // fd1 = $fopen ("/home/williannunes/coremarkDebug.txt", "r");
-        //fd1 = $fopen ("/home/williannunes/coremark.txt", "r");
-        //fd1 = $fopen ("/home/williannunes/test_hanoi.txt", "r");
-
-        if (fd1)  $display("File was opened successfully : %0d", fd1);
-        else     $display("File was NOT opened successfully : %0d", fd1);
-        
-        while (!$feof(fd1)) begin                                                // While not end of file
-            $fgets(line, fd1);                                                   // Reads a line and puts in "line"
-
-            if(line.substr(0,7)=="00000000")
-                code = 1;
-            if(code==1) begin          
-                l = 0;
-                address_flag = 0;                                               // reset variable            
-                while(l<line.len()) begin                                       // While not end of line
-                    if(code==1 & address_flag==5) break;
-                    if(address_flag==0) begin                               
-                        for(int w=0; w<8; w++)  begin                       // Read char by char and convert to string
-                            s = string'(line.getc(l+w));                    // interprets the character as hexadecimal value
-                            test = s.atohex();                              // then convert to logic value
-
-                            tb_add[(31-w*4)-:4] = test;  
-                        end
-                        l = l+8;                                            // Increases the index by a word 
-                        address_flag = 1;                                   // Flag indicates that first word of the line was read
-                    end else if(line[l]==" ")                               // Ignores spaces
-                        l++;
-                    else begin
-                        s= string'(line.getc(l+6));
-                        test = s.atohex();
-                        tb_data[31:28] <= test;
-                        s= string'(line.getc(l+7));
-                        test = s.atohex();
-                        tb_data[27:24] <= test;
-                        s= string'(line.getc(l+4));
-                        test = s.atohex();
-                        tb_data[23:20] <= test;
-                        s= string'(line.getc(l+5));
-                        test = s.atohex();
-                        tb_data[19:16] <= test;
-                        s= string'(line.getc(l+2));
-                        test = s.atohex();
-                        tb_data[15:12] <= test;
-                        s= string'(line.getc(l+3));
-                        test = s.atohex();
-                        tb_data[11:8] <= test;
-                        s= string'(line.getc(l));
-                        test = s.atohex();
-                        tb_data[7:4] <= test;
-                        s= string'(line.getc(l+1));
-                        test = s.atohex();
-                        tb_data[3:0] <= test;
-
-                        l = l+8;
-                                                                            // Increases the index by a word 
-
-                        #0.1                                                // Wait for 0.1 ns
-                        if(code==1) go_d = 1;                              // The go_d signal enables data memory writing
-                                    
-                        #0.1                                                // Wait for 0.1 ns
-                        tb_add = tb_add + 4;                                // allows reading more than one word per line by increasing RAM Address
-                        go_d = 0; 
-                                
-                        address_flag++;                                   // Flags that 2 words were read in the line
-                        end
-                    end
-                l = l+1;
-            end                               //end if
-        end                                   //while not end of file end 
-
       #50 reset = 1;
 
       last_recv_time = $realtime;
-
    end
-
 endmodule
-

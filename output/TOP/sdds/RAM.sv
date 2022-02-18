@@ -19,7 +19,6 @@ module RAM_mem #(parameter startaddress = 32'h00000000)(
     output wires32 data_out
     );
 
-//ram_memory RAM;
 bit [7:0] RAM [0:4194303];
 wires32 W_tmp_address, R_tmp_address, INST_tmp_address;
 wires16 W_low_address, R_low_address, INST_low_address;
@@ -39,23 +38,16 @@ int i;
     assign INST_low_address = INST_tmp_address[15:0];                 // Considers only the less significant half
     assign INST_low_address_int = INST_low_address;   
 
-/*
+
     initial begin
-        
-        $readmemh("/home/williannunes/Sync/memDump.txt", RAM);
-        //$readmemh("coremark.txt", RAM);
+        fd = $fopen ("/home/williannunes/test.bin", "r");
+        //fd = $fopen ("/home/williannunes/test_hanoi.bin", "r");
+        //fd = $fopen ("/home/williannunes/coremarkDebug.bin", "r");
 
-        //#10
-        //fd = $fopen ("/home/williannunes/BerkeleySuite.bin", "r");
-        //fd = $fopen ("/home/williannunes/arv-coremark/coremark.bin", "r");
-        //fd = $fopen ("./test.bin", "r");
-
-        //r = $fread(RAM, fd);
-
+        r = $fread(RAM, fd);
         $display("read %d elements \n", r);
-
     end
-*/
+
 ////////////////////////////////////////////////////////////// Writes in memory ASYNCHRONOUSLY //////////////////////////////////////////////////////
     always @(we_n or W_low_address) begin               // Sensitivity list 
         if(we_n==0 && W_low_address_int>=0 && W_low_address_int<=(MEMORY_SIZE-3)) begin // Check address range and write signals
@@ -83,7 +75,6 @@ int i;
             data_out[23:16] <= RAM[R_low_address_int+2];
             data_out[15:8] <= RAM[R_low_address_int+1];
             data_out[7:0] <= RAM[R_low_address_int];
-            //$display("%t diparou o processo %h is %d", $time, low_address_int, RAM[low_address_int]);
         end
     end
 
@@ -96,5 +87,4 @@ int i;
             instruction_out[7:0] <= RAM[INST_low_address_int];
         end
     end
-
 endmodule
