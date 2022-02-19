@@ -22,13 +22,11 @@ module logicUnit #(parameter  DEPTH = 3)
         for(int i = 1; i < DEPTH; i++)
             result[i] <= result[i-1];
 
-        if(i==OP0)             // XOR 
+        if(i==OP0)                                  // XOR 
             result[0] <= opA ^ opB;
-        else if(i==OP1)         // OR 
+        else if(i==OP1)                             // OR 
             result[0] <= opA | opB;
-        else                   // AND
+        else                                        // AND
             result[0] <= opA & opB;
     end
-
-
 endmodule

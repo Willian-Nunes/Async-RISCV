@@ -7,7 +7,7 @@
 `include "pkg.sv"
 import my_pkg::*;
 
-module bypassUnit #(parameter  DEPTH = 3)               // LUI, NOP E INVALID
+module bypassUnit #(parameter  DEPTH = 3)           // LUI, NOP E INVALID
     (input logic clk,
     input logic [31:0]  opA,
     output logic [31:0] result_out);
