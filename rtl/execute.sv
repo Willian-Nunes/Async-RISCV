@@ -31,11 +31,10 @@ import my_pkg::*;
     output logic [31:0] read_address,
     output logic read,                            // Ce to memory read
     input logic [31:0] DATA_in,                 // Data coming from memory
-    output logic write,                            // Signal that indicates the write memory operation
-    output logic [1:0] size);                           // Signal that indicates the size of Read or Write in memory(byte(1),half(2),word(4))
+    output logic [3:0] write);                            // Signal that indicates the write memory operation
 
-    logic jump_int, write_int, we_branchUnit, we_memoryUnit;
-    logic [1:0] size_int;
+    logic jump_int, we_branchUnit, we_memoryUnit;
+    logic [3:0] write_int;
     logic [4:0] shiftB;
     logic [31:0] adderA, adderB, logicA, logicB, shiftA, branchA, branchB, branchC, memoryA, memoryB, memoryC, bypassB, NPCbranch, result [7:0];
     instruction_type adder_i, logic_i, shift_i, branch_i, memory_i, queue_i;
@@ -49,7 +48,7 @@ import my_pkg::*;
     shiftUnit  #(DEPTH) shift1   (.clk(clk), .opA(shiftA), .opB(shiftB), .i(shift_i), .result_out(result[2]));
     branchUnit #(DEPTH) branch1  (.clk(clk), .opA(branchA), .opB(branchB), .offset(branchC), .NPC(NPCbranch), .i(branch_i), .result_out(result[4]), .result_jal(result[3]), .jump_out(jump_int), .we_out(we_branchUnit));
     bypassUnit #(DEPTH) bypass1  (.clk(clk), .opA(bypassB), .result_out(result[5]));
-    memoryUnit #(DEPTH) memory1  (.clk(clk), .opA(memoryA), .opB(memoryB), .data(memoryC), .i(memory_i), .read_address(read_address), .read(read), .DATA_in(DATA_in), .write_address(result[7]), .DATA_wb(result[6]),  .write(write_int), .size(size_int), .we_out(we_memoryUnit));
+    memoryUnit #(DEPTH) memory1  (.clk(clk), .opA(memoryA), .opB(memoryB), .data(memoryC), .i(memory_i), .read_address(read_address), .read(read), .DATA_in(DATA_in), .write_address(result[7]), .DATA_wb(result[6]),  .write(write_int), .we_out(we_memoryUnit));
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     always@(posedge clk) begin
@@ -118,15 +117,12 @@ import my_pkg::*;
 
     hold jump_h (.a(jump_int), .en(xu_int[DEPTH-1]==branch), .q(jump_out), .*);
     discard zeroJ_d (.a(0), .en(xu_int[DEPTH-1]!=branch), .q(jump_out), .*);
-
-    for (genvar i = 0; i < 2 ; i++) begin
-        hold size_h (.a(size_int[i]), .en(xu_int[DEPTH-1]==memory), .q(size[i]), .*);
-        discard zeroS_d (.a(0), .en(xu_int[DEPTH-1]!=memory), .q(size[i]), .*);
+    
+    for (genvar i = 0; i < 4 ; i++) begin
+      hold write_h (.a(write_int[i]), .en(xu_int[DEPTH-1]==memory), .q(write[i]), .*);
+      discard zeroW_d (.a(0), .en(xu_int[DEPTH-1]!=memory), .q(write[i]), .*);
     end
-      
-    hold write_h (.a(write_int), .en(xu_int[DEPTH-1]==memory), .q(write), .*);
-    discard zeroW_d (.a(0), .en(xu_int[DEPTH-1]!=memory), .q(write), .*);
-
+    
     hold WeBrUn_h (.a(we_branchUnit), .en(xu_int[DEPTH-1]==branch), .q(we_out), .*);
     hold WeMemUn_h (.a(we_memoryUnit), .en(xu_int[DEPTH-1]==memory), .q(we_out), .*);
     discard Weone_d (.a(1), .en(xu_int[DEPTH-1]!=branch && xu_int[DEPTH-1]!=memory), .q(we_out), .*);

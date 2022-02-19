@@ -21,8 +21,7 @@ module TOP(
     /////////////////////////////////
     output logic [31:0] write_address, 
     output logic [31:0] DATA_out,
-    output logic write,
-    output logic [1:0] size,
+    output logic [3:0] write,
     /////////////////////////////////
     `ifdef debug
     output logic reg_we,
@@ -53,8 +52,7 @@ module TOP(
     output logic we_ret,
     output logic jump_ret,
     output logic [3:0] tag_ret,
-    output logic write_ret,
-    output logic [1:0] size_ret
+    output logic [3:0] write_ret,
     `endif
     );
 /******************************/
@@ -73,8 +71,8 @@ module TOP(
     
 
     logic [31:0] result_ret [1:0];
-    logic jump_ret, write_ret;
-    logic [1:0] size_ret;
+    logic jump_ret;
+    logic [3:0] write_ret;
     logic we_ret;
 
     logic we_int, we_int2, we_int3, reg_we;
@@ -154,9 +152,9 @@ module TOP(
                 
 
     execute #(DEPTH) Exec ( .i(i_exec), .xu_sel(xu_exec), .tag_in(tag_exec),
-                   .result_out(result_ret), .jump_out(jump_ret), .stream_tag_out(tag_ret), .write(write_ret), .size(size_ret), .we_out(we_ret), .*);
+                   .result_out(result_ret), .jump_out(jump_ret), .stream_tag_out(tag_ret), .write(write_ret), .we_out(we_ret), .*);
 
-    retire Retire (.result(result_ret), .jump(jump_ret), .instruction_tag(tag_ret), .write_in(write_ret), .size_in(size_ret), .we(we_ret), 
+    retire Retire (.result(result_ret), .jump(jump_ret), .instruction_tag(tag_ret), .write_in(write_ret), .we(we_ret), 
                     .reg_we(reg_we), .WrData(WrData), .New_pc(New_pc_int), .*);
 
 endmodule

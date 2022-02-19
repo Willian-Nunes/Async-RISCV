@@ -14,15 +14,13 @@ module retire(
     input logic jump,                       // Jump signal from branch unit
     input logic we,
     input logic [3:0] instruction_tag,      // Instruction tag to be compared with retire tag
-    input logic write_in,
-    input logic [1:0] size_in,
+    input logic [3:0] write_in,
     output logic reg_we,              // Write Enable to Register Bank
     output logic [31:0] WrData,
     output logic [31:0] New_pc,
     output logic [31:0] write_address,  
     output logic [31:0] DATA_out,
-    output logic write,
-    output logic [1:0] size
+    output logic [3:0] write
     );
 
     logic [3:0] curr_tag;
@@ -67,14 +65,11 @@ module retire(
         discard NewPC_D (.a(result[1][i]), .q(New_pc[i]), .en(jump==1 && killed==0), .*);
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    for (genvar i=0; i < $bits(write); i++)
+        discard write_D (.a(write_in[i]), .q(write[i]), .en(write_in!=0 && killed==0), .*);
 
-    discard write_D (.a(write_in), .q(write), .en(write_in==1 && killed==0), .*);
-
-    for (genvar i=0; i < $bits(size); i++)
-        discard size_D (.a(size_in[i]), .q(size[i]), .en(write_in==1 && killed==0), .*);
-    
     for (genvar i=0; i < $bits(write_address); i++) begin
-        discard WrAdd_D (.a(result[1][i]), .q(write_address[i]), .en(write_in==1 && killed==0), .*);
-        discard Dout_D (.a(result[0][i]), .q(DATA_out[i]), .en(write_in==1 && killed==0), .*);
+        discard WrAdd_D (.a(result[1][i]), .q(write_address[i]), .en(write_in!=0 && killed==0), .*);
+        discard Dout_D (.a(result[0][i]), .q(DATA_out[i]), .en(write_in!=0 && killed==0), .*);
     end
 endmodule

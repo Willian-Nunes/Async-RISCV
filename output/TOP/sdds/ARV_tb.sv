@@ -28,8 +28,7 @@ module  ARV_tb ();
     logic read_t, read_f, read_ack;
     logic [31:0] read_address_t, read_address_f, read_address_ack, DATA_in_t, DATA_in_f, DATA_in_ack;
 
-    logic write_t, write_f, write_ack;
-    logic [1:0] size_t, size_f, size_ack;
+    logic [3:0] write_t, write_f, write_ack;
     logic [31:0] write_address_t, write_address_f, write_address_ack, DATA_out_t, DATA_out_f, DATA_out_ack;
 
     `ifdef debug
@@ -50,8 +49,7 @@ module  ARV_tb ();
         logic we_ret_t, we_ret_f, we_ret_ack;
         logic jump_ret_t, jump_ret_f, jump_ret_ack;
         logic [3:0] tag_ret_t, tag_ret_f, tag_ret_ack;
-        logic write_ret_t, write_ret_f, write_ret_ack;
-        logic [1:0] size_ret_t, size_ret_f, size_ret_ack;
+        logic [3:0] write_ret_t, write_ret_f, write_ret_ack;
         ///////////////////////////////////////////////////////////////////////////
         logic [31:1] addrW_t, addrW_f, addrW_ack;
 
@@ -62,8 +60,8 @@ module  ARV_tb ();
 
     logic [31:0] NPC, instruction;
     logic [31:0] read_address;
-    logic read, write;
-    logic [1:0] size;
+    logic read;
+    logic [3:0] write;
     logic [31:0] write_address, data_write;
 
     int fd, fd1, fd2, fd3, fd4, fd5;
@@ -170,28 +168,25 @@ module  ARV_tb ();
         end
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    always @(write_address_t or write_address_f or DATA_out_t or DATA_out_f or size_t or size_f or write_t or write_f)
-        if( (~|(write_address_t|write_address_f)) && (~|(DATA_out_t|DATA_out_f)) && (~|(size_t|size_f)) && (~|(write_t|write_f)) )begin
-            write = 0;
+    always @(write_address_t or write_address_f or DATA_out_t or DATA_out_f or write_t or write_f)
+        if( (~|(write_address_t|write_address_f)) && (~|(DATA_out_t|DATA_out_f)) && (~|(write_t|write_f)) )begin
+            write = '0;
 
             write_address_ack = '0;
             DATA_out_ack = 0;
-            size_ack = '0;
             write_ack = '0;
         
-        end else if( (&(write_address_t|write_address_f)) && (&(DATA_out_t|DATA_out_f)) && (&(size_t|size_f)) && (&(write_t|write_f)) )begin
+        end else if( (&(write_address_t|write_address_f)) && (&(DATA_out_t|DATA_out_f)) && (&(write_t|write_f)) )begin
 
-            $fdisplay(fd4,"[%0d] Write: %h in address %d(%h) size: %0d  write %0d",
-                         $time, DATA_out_t, write_address_t, write_address_t, size_t, write_t);
+            $fdisplay(fd4,"[%0d] Write: %h in address %d(%h) write %04b",
+                         $time, DATA_out_t, write_address_t, write_address_t, write_t);
                    
-            write = 1;
-            size = size_t;
+            write = write_t;
             write_address = write_address_t;
             data_write = DATA_out_t;
 
             write_address_ack = '1;
             DATA_out_ack = '1;
-            size_ack = '1;
             write_ack = '1;
         end
 
@@ -317,25 +312,23 @@ module  ARV_tb ();
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    always@(tag_ret_t or tag_ret_f or result_ret_0__t or result_ret_0__f or result_ret_1__t or result_ret_1__f or jump_ret_t or jump_ret_f or we_ret_t or we_ret_f or size_ret_t or size_ret_f or write_ret_t or write_ret_f)
-        if( (~|(tag_ret_t|tag_ret_f)) && (~|(result_ret_0__t|result_ret_0__f)) && (~|(result_ret_1__t|result_ret_1__f)) && (~|(jump_ret_t|jump_ret_f)) && (~|(we_ret_t|we_ret_f)) && (~|(size_ret_t|size_ret_f)) && (~|(write_ret_t|write_ret_f)) ) begin
+    always@(tag_ret_t or tag_ret_f or result_ret_0__t or result_ret_0__f or result_ret_1__t or result_ret_1__f or jump_ret_t or jump_ret_f or we_ret_t or we_ret_f or write_ret_t or write_ret_f)
+        if( (~|(tag_ret_t|tag_ret_f)) && (~|(result_ret_0__t|result_ret_0__f)) && (~|(result_ret_1__t|result_ret_1__f)) && (~|(jump_ret_t|jump_ret_f)) && (~|(we_ret_t|we_ret_f)) && (~|(write_ret_t|write_ret_f)) ) begin
             tag_ret_ack = '0;
             result_ret_0__ack = '0;
             result_ret_1__ack = '0;
             jump_ret_ack = 0;
             we_ret_ack = '0;
-            size_ret_ack = '0;
             write_ret_ack = '0;
-        end else if( (&(tag_ret_t|tag_ret_f)) && (&(result_ret_0__t|result_ret_0__f)) && (&(result_ret_1__t|result_ret_1__f)) && (&(jump_ret_t|jump_ret_f)) && (&(we_ret_t|we_ret_f)) && (&(size_ret_t|size_ret_f)) && (&(write_ret_t|write_ret_f)) ) begin
+        end else if( (&(tag_ret_t|tag_ret_f)) && (&(result_ret_0__t|result_ret_0__f)) && (&(result_ret_1__t|result_ret_1__f)) && (&(jump_ret_t|jump_ret_f)) && (&(we_ret_t|we_ret_f)) && (&(write_ret_t|write_ret_f)) ) begin
             tag_ret_ack = '1;
             result_ret_0__ack = '1;
             result_ret_1__ack = '1;
             jump_ret_ack = 1;
             we_ret_ack = '1;
-            size_ret_ack = '1;
             write_ret_ack = '1;
-            $fdisplay(fd3,"[%0d] Retire received:  Res0=%0h  Res1=%0h  We=%0d  Tag=%0d   Jump=%0d  Write=%0d  Size=%0d",
-                     $time, result_ret_0__t, result_ret_1__t, we_ret_t, tag_ret_t, jump_ret_t, write_ret_t, size_ret_t );
+            $fdisplay(fd3,"[%0d] Retire received:  Res0=%0h  Res1=%0h  We=%0d  Tag=%0d   Jump=%0d  Write=%04b",
+                     $time, result_ret_0__t, result_ret_1__t, we_ret_t, tag_ret_t, jump_ret_t, write_ret_t);
         end
     `endif 
 
@@ -343,13 +336,13 @@ module  ARV_tb ();
 /////////////////////////////////////////////////////////// RAM INSTANTIATION ///////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	RAM_mem #(32'h00000000) RAM_MEM( .write_enable(write), .bw(size), .write_address(Waddress), .data_in(Ddata),
+	RAM_mem #(32'h00000000) RAM_MEM( .write_enable(write), .write_address(Waddress), .data_in(Ddata),
                                      .rst(reset), .inst_address(i_address), .instruction_out(instruction_int),
                                      .read_enable(read), .read_address(read_address), .data_out(data_read));
 
     always_comb begin
-        if(write==1)   Waddress<=write_address;	 else Waddress<=32'h00000000;  // Daddress - write_address
-        if(write==1)  Ddata <= data_write; else Ddata <= 32'h00000000;
+        if(write!=0)   Waddress<=write_address;	 else Waddress<=32'h00000000;  // Daddress - write_address
+        if(write!=0)  Ddata <= data_write; else Ddata <= 32'h00000000;
     end
 
     always@(posedge read_i)
@@ -368,7 +361,7 @@ module  ARV_tb ();
     end
 
     always @(write) begin
-        if((write_address == 32'h80004000 | write_address == 32'h80001000) & write==1) begin
+        if((write_address == 32'h80004000 | write_address == 32'h80001000) & write!=0) begin
             char <= data_write[7:0];
             $write("%c",char);
             $fwrite(fd,"%c",char);

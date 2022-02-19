@@ -7,10 +7,9 @@ import my_pkg::*;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 module RAM_mem #(parameter startaddress = 32'h00000000)(
-    input logic write_enable, 
+    input logic [3:0] write_enable, 
     input logic read_enable,
     input logic rst,  
-    input logic [1:0] bw,
     input wires32 inst_address, 
     input wires32 write_address,
     input wires32 read_address,
@@ -50,21 +49,20 @@ int i;
 
 ////////////////////////////////////////////////////////////// Writes in memory ASYNCHRONOUSLY //////////////////////////////////////////////////////
     always @(write_enable or W_low_address) begin               // Sensitivity list 
-        if(write_enable==1 && W_low_address_int>=0 && W_low_address_int<=(MEMORY_SIZE-3)) begin // Check address range and write signals
+        if(write_enable!=0 && W_low_address_int>=0 && W_low_address_int<=(MEMORY_SIZE-3)) begin // Check address range and write signals
                 if(write_address==32'h80001000)
                     //$display("[%0d] write %0d(%h) in add: %0d(%h) \n", $time, data_in,data_in,W_low_address_int,W_low_address_int);
                     ;
-                else if(bw==2'b11) begin                                 // Store Word(4 bytes)
+                else if(write_enable==4'b1111) begin                                    // Store Word(4 bytes)
                     RAM[W_low_address_int+3] <= data_in[31:24];
                     RAM[W_low_address_int+2] <= data_in[23:16];
                     RAM[W_low_address_int+1] <= data_in[15:8];
                     RAM[W_low_address_int] <= data_in[7:0];
-                end else if(bw==2'b10) begin                        // Store Half(2 bytes)
+                end else if(write_enable==4'b0011) begin                                // Store Half(2 bytes)
                     RAM[W_low_address_int+1] <= data_in[15:8];
                     RAM[W_low_address_int] <= data_in[7:0];
-                end else begin                                  // Store Byte(1 byte)
+                end else                                                                // Store Byte(1 byte)
                     RAM[W_low_address_int] <= data_in[7:0];
-                end
         end
     end
 
